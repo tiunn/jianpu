@@ -11,14 +11,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const beatUnitInput = document.getElementById('beatUnit');
     const measuresPerRowInput = document.getElementById('measuresPerRow');
     const scaleSlider = document.getElementById('scaleSlider');
+    const keySignatureInput = document.getElementById('keySignature');
 
-    const inputs = [input, titleInput, beatsPerBarInput, beatUnitInput, measuresPerRowInput];
+    const inputs = [input, titleInput, beatsPerBarInput, beatUnitInput, measuresPerRowInput, keySignatureInput];
     inputs.forEach(el => el.addEventListener('input', debounce(render, 300))); // Debounce for performance
 
     // Zoom Slider Listener - Instant update
     scaleSlider.addEventListener('input', () => {
         score.style.fontSize = `${scaleSlider.value}px`;
     });
+
+    // Key Signature Listener - Instant update (change event is safer for select)
+    keySignatureInput.addEventListener('change', render);
 
     printBtn.addEventListener('click', () => window.print());
 
@@ -30,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
             beatUnit: beatUnitInput.value,
             measuresPerRow: measuresPerRowInput.value,
             fontSize: scaleSlider.value, // Save Zoom Level
+            keySignature: keySignatureInput.value, // Save Key
             content: input.value
         };
 
@@ -98,6 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     scaleSlider.value = projectData.fontSize;
                     score.style.fontSize = `${projectData.fontSize}px`;
                 }
+                if (projectData.keySignature !== undefined) keySignatureInput.value = projectData.keySignature;
                 if (projectData.content !== undefined) input.value = projectData.content;
 
                 // Render
@@ -134,16 +140,16 @@ document.addEventListener('DOMContentLoaded', () => {
     function render() {
         score.innerHTML = '';
 
-        // 0. Render Title
         const titleText = titleInput.value.trim();
+        // Render Title
         if (titleText) {
             const titleEl = document.createElement('div');
             titleEl.className = 'score-title';
             titleEl.textContent = titleText;
             score.appendChild(titleEl);
-            document.title = titleText; // Update browser tab title for PDF filename
+            document.title = titleText;
         } else {
-            document.title = 'Jianpu Score'; // Default
+            document.title = 'Jianpu Editor';
         }
 
         const text = input.value;
@@ -152,8 +158,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // We will reflow the whole thing.
         const fullText = text.replace(/\n/g, ' ');
 
-        const beatsPerBar = parseInt(beatsPerBarInput.value) || 4;
-        const beatUnit = parseInt(beatUnitInput.value) || 4;
+        const beatsPerBar = parseFloat(beatsPerBarInput.value) || 4;
+        const beatUnit = parseFloat(beatUnitInput.value) || 4;
+        const keySig = keySignatureInput.value || 'C';
         const measuresPerRow = parseInt(measuresPerRowInput.value) || 4;
 
         // Reset font size to measure normally first
@@ -162,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 1. Show Time Signature
         const timeSigEl = document.createElement('div');
         timeSigEl.className = 'time-signature-row';
-        timeSigEl.textContent = `1=C ${beatsPerBar}/${beatUnit}`;
+        timeSigEl.textContent = `1=${keySig} ${beatsPerBar}/${beatUnit}`;
         score.appendChild(timeSigEl);
 
         // 2. Parse Input into Measures

@@ -9,6 +9,7 @@ A simple, lightweight web tool for creating, editing, and printing Jianpu (numbe
 - **Save & Load**: Save your work as `.json` project files and load them later.
 - **Print / PDF Export**: Optimized print styles for high-quality PDF output (with correct beam rendering).
 - **Zoom Control**: Adjust the size of the music notes (defaults to compact size).
+- **Key Signature**: Select the musical key (e.g., `1=C`, `1=G`) from the dropdown.
 - **Customizable**: Set Song Title, Beats per Bar, and Measures per Row.
 
 ## Usage Guide
