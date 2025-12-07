@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Jianpu Editor</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap');
+    </style>
+</head>
+
+<body>
+    <header>
+        <div>
+            <h1>Jianpu Editor</h1>
+            <p class="subtitle">Simple Numbered Musical Notation</p>
+        </div>
+        <div style="flex: 1"></div>
+        <input type="file" id="loadFileInput" accept=".json,.jianpu" style="display: none;" />
+        <button class="btn-secondary" id="loadBtn">📂 Load</button>
+        <button class="btn-secondary" id="saveBtn">💾 Save</button>
+        <button class="btn-secondary" id="printBtn">🖨️ Print / PDF</button>
+    </header>
+
+    <div class="container">
+        <div class="editor-pane" id="editorPane">
+            <div class="pane-header">
+                <span class="subtitle">Input Code</span>
+                <div class="help-tooltip">
+                    <span>?</span>
+                    <div class="tooltip-content">
+                        <strong>Syntax Guide</strong><br>
+                        Notes: 1-7, 0 (rest)<br>
+                        Rhythm: q (8th), s (16th)<br>
+                        Octave: ' (high), , (low)<br>
+                        Duration: - (extend), . (dot)<br>
+                        Example: q1' s5, 3-
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 1: Title -->
+            <div class="controls-row">
+                <input type="text" id="titleInput" placeholder="Song Title"
+                    style="width: 100%; padding: 0.4rem; border: 1px solid var(--border-color); border-radius: 4px;" />
+            </div>
+
+            <!-- Row 2: Settings -->
+            <div class="controls-row">
+                <label>Beats: <input type="number" id="beatsPerBar" value="4" min="1" max="16"
+                        style="width: 3em"></label>
+                / <input type="number" id="beatUnit" value="4" min="1" style="width: 30px;"></label>
+                <label style="margin-left: 0.5rem;">Measures/Row: <input type="number" id="measuresPerRow" value="4"
+                        min="1" style="width: 40px;"></label>
+
+                <div style="width: 1rem;"></div> <!-- Spacer -->
+
+                <label style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
+                    Zoom: <input type="range" id="scaleSlider" min="5" max="80" value="7" step="1" style="flex: 1;">
+                </label>
+            </div>
+
+            <textarea id="inputArea" spellcheck="false" placeholder="Type notes here..."></textarea>
+        </div>
+
+        <div class="gutter" id="gutter"></div>
+
+        <div class="preview-pane" id="previewPane">
+            <div class="pane-header">
+                <h2>Preview</h2>
+            </div>
+            <div id="paper" class="paper">
+                <div id="score" class="score"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
