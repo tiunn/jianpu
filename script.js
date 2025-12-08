@@ -152,12 +152,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.title = 'Jianpu Editor';
         }
 
-        const text = input.value;
-        // Clean text: replace newlines with spaces to treat as continuous stream
-        // User wants "consistent measures per line", so input line breaks shouldn't force new system lines.
-        // We will reflow the whole thing.
-        const fullText = text.replace(/\n/g, ' ');
-
         const beatsPerBar = parseFloat(beatsPerBarInput.value) || 4;
         const beatUnit = parseFloat(beatUnitInput.value) || 4;
         const keySig = keySignatureInput.value || 'C';
@@ -172,27 +166,75 @@ document.addEventListener('DOMContentLoaded', () => {
         timeSigEl.textContent = `1=${keySig} ${beatsPerBar}/${beatUnit}`;
         score.appendChild(timeSigEl);
 
+        // 2. Parse Input into Blocks (Music vs Lyrics)
+        const lines = input.value.split('\n');
+        const blocks = [];
+        let currentBlock = null;
+
+        lines.forEach(line => {
+            // Trim for check? Or keep indentation? 
+            // User: "start with ##". 
+            const trimmed = line.trim();
+            const isLyrics = trimmed.startsWith('##');
+            const type = isLyrics ? 'lyrics' : 'music';
+
+            if (!currentBlock || currentBlock.type !== type) {
+                if (currentBlock) blocks.push(currentBlock);
+                currentBlock = { type: type, lines: [] };
+            }
+
+            if (type === 'lyrics') {
+                // Remove the '##' marker for display
+                currentBlock.lines.push(trimmed.substring(2).trim());
+            } else {
+                // Keep music lines as is (preserving internal spaces, but maybe trimming ends)
+                // Actually, existing music parser splits by whitespace, so spaces don't matter much.
+                // We'll just push the raw line to preserve delimiters if they are line-based.
+                // But we should filter empty lines if they are not intentional spacers?
+                // Existing logic: .replace(/\n/g, ' ') -> joined all lines.
+                // So here we accumulate all "music" lines into one text blob for that block.
+                if (trimmed) currentBlock.lines.push(line);
+            }
+        });
+        if (currentBlock) blocks.push(currentBlock);
+
+        // 3. Render Blocks
+        blocks.forEach(block => {
+            if (block.type === 'lyrics') {
+                const lyricsDiv = document.createElement('div');
+                lyricsDiv.className = 'lyrics-block';
+                block.lines.forEach(lText => {
+                    const p = document.createElement('p');
+                    p.className = 'lyrics-line';
+                    p.textContent = lText || '\u00A0'; // Non-breaking space for empty lines
+                    lyricsDiv.appendChild(p);
+                });
+                score.appendChild(lyricsDiv);
+            } else {
+                // Music Block
+                const musicText = block.lines.join(' '); // Join with space like before
+                renderMusicSection(score, musicText, { beatsPerBar, measuresPerRow, beatsPerBar });
+                // Wait, need beatsPerBar for validity check.
+            }
+        });
+
+        // 6. Apply Zoom from Slider
+        const fontSize = parseInt(scaleSlider.value) || 7;
+        score.style.fontSize = `${fontSize}px`;
+    }
+
+    function renderMusicSection(container, text, config) {
+        const { beatsPerBar, measuresPerRow } = config;
+
         // 2. Parse Input into Measures
         // Delimiters: |:, :|, |, /, or newline.
-        // We use a capturing group to keep the delimiters in the result array.
-        // regex: split by ( |: OR :| OR | OR / OR newline sequence )
-        // Note: \|: matches |:, :\| matches :|, \| matches |, \/ matches /, \n+ matches newlines.
         const tokensAndDelims = text.split(/(\|:|:\||\||\/|\n+)/);
 
         const measures = [];
         let currentMeasure = { content: [], startBar: 'normal', endBar: 'normal' };
-        let pendingStartBar = 'normal'; // To carry over from previous delimiter
 
-        // Helper to finalize current measure and prepare next
         const finalizeMeasure = (endBarType) => {
-            // Only push if it has content OR if it's explicitly explicitly empty but has bars (e.g. | |)
-            // But usually empty strings between delimiters are artifacts.
-            // Let's filter empty text tokens unless they are "real" empty measures?
-            // Simplest: If logic hits a delimiter, it closes the current measure context.
-
-            // If this measure has content, check validity and push
             if (currentMeasure.content.length > 0 || currentMeasure.isExplicitEmpty) {
-                // Calculate duration
                 let totalDuration = 0;
                 let debugInfo = [];
                 currentMeasure.content.forEach(item => {
@@ -220,19 +262,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        // Loop through tokens
         tokensAndDelims.forEach(token => {
-            // Check if it is a delimiter (captured by split)
-            // Delimiters: |:, :|, |, /, or newline sequence.
             const isDelimiter = token.match(/^(\|:|:\||\||\/|\n+)$/);
 
             if (isDelimiter) {
-                // It's a delimiter.
-                // It ends the previous measure (if any) and sets up the next.
-
                 let prevEndType = 'normal';
                 let nextStartType = 'normal';
-                const d = token.trim(); // May be empty if newline
+                const d = token.trim();
 
                 if (d === '|:') {
                     prevEndType = 'normal';
@@ -241,27 +277,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     prevEndType = 'repeat-end';
                     nextStartType = 'normal';
                 } else {
-                    // Regular bar (| or / or newline)
                     prevEndType = 'normal';
                     nextStartType = 'normal';
                 }
 
-                // If we have accumulation, close it
                 if (currentMeasure.content.length > 0) {
                     finalizeMeasure(prevEndType);
-                    // Start new measure
                     currentMeasure = { content: [], startBar: nextStartType, endBar: 'normal' };
                 } else {
-                    // Start of piece or sequential delimiters
                     currentMeasure.startBar = nextStartType;
                 }
 
             } else {
-                // It's content (notes) or whitespace
                 const t = token.trim();
-                if (!t) return; // Skip pure whitespace (that isn't a newline delimiter)
+                if (!t) return;
 
-                // Parse notes in this chunk
                 const contentTokens = t.split(/\s+/);
                 contentTokens.forEach(ct => {
                     if (!ct) return;
@@ -277,12 +307,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Finalize last measure if exists
         if (currentMeasure.content.length > 0) {
-            finalizeMeasure('normal'); // End of piece
+            finalizeMeasure('normal');
         }
 
-        // 3. Chunk Measures into Rows (Grid Layout)
+        // 3. Chunk Measures into Rows
         const rows = [];
         for (let i = 0; i < measures.length; i += measuresPerRow) {
             rows.push(measures.slice(i, i + measuresPerRow));
@@ -293,7 +322,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const rowEl = document.createElement('div');
             rowEl.className = 'system-row';
 
-            // Pad row if last row has fewer measures?
             const needed = measuresPerRow - rowMeasures.length;
 
             rowMeasures.forEach(mObj => {
@@ -303,12 +331,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const measureInner = document.createElement('div');
                 measureInner.className = 'measure-inner';
 
-                // Add error class if invalid
                 if (!mObj.isValid) {
                     measureInner.classList.add('measure-error');
                 }
 
-                // Add Repeat Sign Classes
                 if (mObj.startBar === 'repeat-start') {
                     measureEl.classList.add('repeat-start');
                 }
@@ -316,31 +342,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     measureEl.classList.add('repeat-end');
                 }
 
-                // Add Diagnostic Tooltip
                 measureInner.title = `Beats: ${mObj.duration} / ${beatsPerBar}\nNotes: ${mObj.debugStr}`;
-
                 renderMeasureContent(measureInner, mObj.content);
-
                 measureEl.appendChild(measureInner);
                 rowEl.appendChild(measureEl);
             });
 
-            // Fillers
             for (let k = 0; k < needed; k++) {
                 const filler = document.createElement('div');
                 filler.className = 'measure';
-                // Empty
-                // filler.style.borderRight = "none"; // Option: hide bar lines for empty?
-                // Usually blank measures in score still have lines.
                 rowEl.appendChild(filler);
             }
 
-            score.appendChild(rowEl);
+            container.appendChild(rowEl);
         });
-
-        // 6. Apply Zoom from Slider
-        const fontSize = parseInt(scaleSlider.value) || 7;
-        score.style.fontSize = `${fontSize}px`;
     }
 
     function renderMeasureContent(container, items) {

@@ -34,6 +34,15 @@ Type notes using numbers `1-7` and `0` for rests.
 - **Repeat Signs**: Use `|:` to start a repeat and `:|` to end it.
   - Example: `|: 1 2 3 4 :|`
 
+### Lyrics / Text Blocks
+Start a line with `##` to treat it as a lyrics or text line. Consecutive lines starting with `##` will be grouped together with tighter spacing.
+```text
+1 2 3 4
+## This is verse 1
+## The lyrics are here
+5 6 7 8
+```
+
 ### Example
 ```text
 q1 q1 q5 q5 q6 q6 q5 -
