@@ -14,23 +14,36 @@
 <body>
     <header>
         <div>
-            <h1>Jianpu Editor</h1>
-            <p class="subtitle">Simple Numbered Musical Notation</p>
+            <h1 data-i18n="appTitle">Jianpu Editor</h1>
+            <p class="subtitle" data-i18n="appSubtitle">Simple Numbered Musical Notation</p>
         </div>
         <div style="flex: 1"></div>
         <input type="file" id="loadFileInput" accept=".json,.jianpu" style="display: none;" />
-        <button class="btn-secondary" id="loadBtn">📂 Load</button>
-        <button class="btn-secondary" id="saveBtn">💾 Save</button>
-        <button class="btn-secondary" id="printBtn">🖨️ Print / PDF</button>
+        <button class="btn-secondary" id="loadBtn" data-i18n="loadBtn">📂 Load</button>
+        <button class="btn-secondary" id="saveBtn" data-i18n="saveBtn">💾 Save</button>
+        <button class="btn-secondary" id="printBtn" data-i18n="printBtn">🖨️ Print / PDF</button>
+        <button class="btn-secondary" id="langEnBtn">English</button>
+        <button class="btn-secondary" id="langZhBtn">繁體中文</button>
     </header>
 
     <div class="container">
+        <div class="preview-pane" id="previewPane">
+            <div class="pane-header">
+                <h2 data-i18n="previewTitle">Preview</h2>
+            </div>
+            <div id="paper" class="paper">
+                <div id="score" class="score"></div>
+            </div>
+        </div>
+
+        <div class="gutter" id="gutter"></div>
+
         <div class="editor-pane" id="editorPane">
             <div class="pane-header">
-                <span class="subtitle">Input Code</span>
+                <span class="subtitle" data-i18n="inputCode">Input Code</span>
                 <div class="help-tooltip">
                     <span>?</span>
-                    <div class="tooltip-content">
+                    <div class="tooltip-content" data-i18n-html="tooltipContent">
                         <strong>Syntax Guide</strong><br>
                         Notes: 1-7, 0 (rest)<br>
                         Rhythm: q (8th), s (16th)<br>
@@ -43,25 +56,28 @@
 
             <!-- Row 1: Title -->
             <div class="controls-row">
-                <input type="text" id="titleInput" placeholder="Song Title"
+                <input type="text" id="titleInput" placeholder="Song Title" data-i18n-placeholder="songTitlePh"
                     style="width: 100%; padding: 0.4rem; border: 1px solid var(--border-color); border-radius: 4px;" />
             </div>
 
             <!-- Row 2: Settings -->
             <div class="controls-row">
-                <label>Beats: <input type="number" id="beatsPerBar" value="4" min="1" max="16"
-                        style="width: 3em"></label>
+                <label><span data-i18n="beatsLabel">Beats:</span> <input type="number" id="beatsPerBar" value="4"
+                        min="1" max="16" style="width: 3em"></label>
                 / <input type="number" id="beatUnit" value="4" min="1" style="width: 30px;"></label>
-                <label style="margin-left: 0.5rem;">Measures/Row: <input type="number" id="measuresPerRow" value="4"
-                        min="1" style="width: 40px;"></label>
+                <label style="margin-left: 0.5rem;"><span data-i18n="measuresLabel">Measures/Row:</span> <input
+                        type="number" id="measuresPerRow" value="4" min="1" style="width: 40px;"></label>
 
                 <div style="width: 1rem;"></div> <!-- Spacer -->
 
-                <label style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
-                    Zoom: <input type="range" id="scaleSlider" min="5" max="80" value="7" step="1" style="flex: 1;">
-                </label>
+                <div class="zoom-controls" style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
+                    <span data-i18n="zoomLabel">Zoom:</span>
+                    <button class="btn-secondary" id="zoomOut" data-i18n="zoomOutBtn">Zoom Out</button>
+                    <span id="zoomValue" style="min-width: 3em; text-align: center;">16px</span>
+                    <button class="btn-secondary" id="zoomIn" data-i18n="zoomInBtn">Zoom In</button>
+                </div>
 
-                <label style="margin-left: 1rem;">Key:
+                <label style="margin-left: 1rem;"><span data-i18n="keyLabel">Key:</span>
                     <select id="keySignature" style="padding: 0.1rem;">
                         <option value="C" selected>C</option>
                         <option value="C#">C#</option>
@@ -81,18 +97,8 @@
                 </label>
             </div>
 
-            <textarea id="inputArea" spellcheck="false" placeholder="Type notes here..."></textarea>
-        </div>
-
-        <div class="gutter" id="gutter"></div>
-
-        <div class="preview-pane" id="previewPane">
-            <div class="pane-header">
-                <h2>Preview</h2>
-            </div>
-            <div id="paper" class="paper">
-                <div id="score" class="score"></div>
-            </div>
+            <textarea id="inputArea" spellcheck="false" placeholder="Type notes here..."
+                data-i18n-placeholder="inputAreaPh"></textarea>
         </div>
     </div>
 

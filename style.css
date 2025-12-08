@@ -1,3 +1,7 @@
+* {
+    box-sizing: border-box;
+}
+
 :root {
     --bg-color: #f8f9fa;
     --card-bg: #ffffff;
@@ -47,6 +51,7 @@ h1 {
     display: flex;
     flex: 1;
     overflow: hidden;
+    flex-direction: column;
 }
 
 .editor-pane,
@@ -59,15 +64,18 @@ h1 {
 }
 
 .preview-pane {
-    flex: 1;
-    /* Take remaining space */
+    height: 60%;
+    /* Initial height */
+    /* width: 100%; Removed to prevent overflow */
+    /* flex: 1; Removed */
+    flex: none;
+    /* Make it rigid so we can resize height */
 }
 
 .editor-pane {
-    /* flex: 0 0 auto; Removed flex:1 to allow manual sizing */
-    width: 30%;
-    /* Narrower default (was 40%) to give more space to Preview */
-    /* Initial width */
+    flex: 1;
+    /* Fill remaining space */
+    /* width: 100%; */
     display: flex;
     flex-direction: column;
     padding: 1rem;
@@ -78,12 +86,15 @@ h1 {
 
 /* Draggable Gutter */
 .gutter {
-    width: 8px;
-    /* Width of the handle */
+    height: 10px;
+    width: 100%;
     background: #e9ecef;
-    cursor: col-resize;
+    cursor: row-resize;
+    /* Vertical resize cursor */
     transition: background 0.2s;
     flex-shrink: 0;
+    border-top: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
 }
 
 .gutter:hover,
@@ -200,13 +211,30 @@ textarea:focus {
 
 /* --- Jianpu Rendering Styles --- */
 
-/* Lyrics Blocks */
-.lyrics-block {
-    width: 100%;
-    text-align: left;
-    margin-top: 4.5em;
-    margin-bottom: 4.5em;
-    /* 1.5x lyrics font size (3em * 1.5 = 4.5em) */
+/* Lyrics Aligned with Notes */
+.lyric-container {
+    position: absolute;
+    top: 100%;
+    /* Below the note */
+    left: 0;
+    /* Align left edge with note group */
+    transform: none;
+    /* Remove centering */
+    padding-top: 2.5em;
+    /* Gap = 2.5x lyrics font size */
+    font-family: 'Courier New', monospace;
+    font-size: 2.4em;
+    /* 0.8x of Note Size (3em) = 2.4em */
+    white-space: nowrap;
+    color: #333;
+    font-weight: bold;
+    line-height: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    /* Left align rows with each other */
+    gap: 1em;
+    /* Gap = 1x lyrics font size */
 }
 
 /* Spacing Logic Adjustments */
@@ -215,9 +243,10 @@ textarea:focus {
     margin-top: 0;
 }
 
-/* If a system row follows a lyrics block, use standard 3em gap (from lyrics-block bottom margin) */
-.lyrics-block+.system-row {
-    margin-top: 0;
+/* Increase margin to accommodate larger lyrics, gap, and next row */
+.system-row {
+    margin-top: 20em;
+    /* 6em top + ~8em lyrics (2 lines) + 6em bottom = ~20em */
 }
 
 /* Score Title */
@@ -230,20 +259,6 @@ textarea:focus {
     margin-bottom: 0.5em;
     /* Reduced margin since font is huge */
     font-family: var(--font-ui);
-    /* Or music font? Usually UI or Serif. Keep UI for readability */
-}
-
-.lyrics-line {
-    margin: 0;
-    line-height: 1.2;
-    font-size: 3em;
-    /* Match Note Size (3em) - No magnification */
-    font-weight: bold;
-    /* Match Note Weight */
-    font-family: var(--font-ui);
-    color: #333;
-    white-space: pre-wrap;
-    /* Preserve spaces for manual alignment */
 }
 
 /* Time Signature Row */
@@ -263,8 +278,7 @@ textarea:focus {
 .system-row {
     display: flex;
     width: 100%;
-    margin-top: 12em;
-    /* 3x Score Row Height (Estimated 4em * 3 = 12em) */
+    /* margin-top handled above */
     margin-bottom: 0;
     border-right: 2px solid black;
 
@@ -503,8 +517,8 @@ textarea:focus {
 }
 
 .gutter {
-    width: 10px;
-    cursor: ew-resize;
+    height: 10px;
+    cursor: row-resize;
     background: var(--bg-color);
 }
 
@@ -551,6 +565,9 @@ textarea:focus {
        Let's keep the font size from the element style, but ensure it wraps.
     */
     .score {
-        max-width: none;
+        max-width: 900px;
+        /* Enforce same max-width as screen to preserve alignment */
+        margin: 0 auto;
+        /* Center it */
     }
 }

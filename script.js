@@ -1,4 +1,121 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- Localization ---
+    const translations = {
+        en: {
+            appTitle: "Jianpu Editor",
+            appSubtitle: "Simple Numbered Musical Notation",
+            loadBtn: "📂 Load",
+            saveBtn: "💾 Save",
+            printBtn: "🖨️ Print / PDF",
+            inputCode: "Input Code",
+            songTitlePh: "Song Title",
+            beatsLabel: "Beats:",
+            measuresLabel: "Measures/Row:",
+            zoomLabel: "Zoom:",
+            zoomInBtn: "Zoom In",
+            zoomOutBtn: "Zoom Out",
+            keyLabel: "Key:",
+            inputAreaPh: "Type notes here...",
+            previewTitle: "Preview",
+            defaultSongTitle: "Song Title",
+            tooltipContent: `<strong>Syntax Guide</strong><br>
+                        Notes: 1-7, 0 (rest)<br>
+                        Rhythm: q (8th), s (16th)<br>
+                        Octave: ' (high), , (low)<br>
+                        Duration: - (extend), . (dot)<br>
+                        Example: q1' s5, 3-`
+        },
+        zh: {
+            appTitle: "簡譜編輯器",
+            appSubtitle: "簡易數字樂譜編輯器",
+            loadBtn: "📂 讀取",
+            saveBtn: "💾 儲存",
+            printBtn: "🖨️ 列印 / PDF",
+            inputCode: "輸入代碼",
+            songTitlePh: "歌曲標題",
+            beatsLabel: "拍號:",
+            measuresLabel: "每行小節:",
+            zoomLabel: "縮放:",
+            zoomInBtn: "放大",
+            zoomOutBtn: "縮小",
+            keyLabel: "調號:",
+            inputAreaPh: "在此輸入音符...",
+            previewTitle: "預覽",
+            defaultSongTitle: "歌曲標題",
+            tooltipContent: `<strong>語法指南</strong><br>
+                        音符: 1-7, 0 (休止)<br>
+                        節奏: q (八分), s (十六分)<br>
+                        八度: ' (高), , (低)<br>
+                        時值: - (延音), . (附點)<br>
+                        範例: q1' s5, 3-`
+        }
+    };
+
+    // Fix for "Simple Numbered..." if I want:
+    translations.zh.appSubtitle = "簡易數字樂譜編輯器";
+
+    const langEnBtn = document.getElementById('langEnBtn');
+    const langZhBtn = document.getElementById('langZhBtn');
+
+    function updateLanguage(lang) {
+        const t = translations[lang];
+        if (!t) return;
+
+        // Button State
+        if (lang === 'en') {
+            langEnBtn.style.background = 'var(--accent-color)';
+            langEnBtn.style.color = 'white';
+            langZhBtn.style.background = 'white';
+            langZhBtn.style.color = 'var(--text-color)';
+        } else {
+            langZhBtn.style.background = 'var(--accent-color)';
+            langZhBtn.style.color = 'white';
+            langEnBtn.style.background = 'white';
+            langEnBtn.style.color = 'var(--text-color)';
+        }
+
+        // Text Content
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (t[key]) el.textContent = t[key];
+        });
+
+        // Placeholders
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-i18n-placeholder');
+            if (t[key]) el.placeholder = t[key];
+        });
+
+        // HTML Content (Tooltip)
+        document.querySelectorAll('[data-i18n-html]').forEach(el => {
+            const key = el.getAttribute('data-i18n-html');
+            if (t[key]) el.innerHTML = t[key];
+        });
+
+        // Smart Title Update: Only change if it's currently a default or empty
+        const currentVal = titleInput.value.trim();
+        const enDefault = translations.en.defaultSongTitle;
+        const zhDefault = translations.zh.defaultSongTitle;
+
+        if (!currentVal || currentVal === enDefault || currentVal === zhDefault) {
+            titleInput.value = t.defaultSongTitle;
+            render(); // Update preview immediately
+        }
+    }
+
+    langEnBtn.addEventListener('click', () => updateLanguage('en'));
+    langZhBtn.addEventListener('click', () => updateLanguage('zh'));
+
+    // Set initial active state
+    // updateLanguage('en'); // Moved to end of init
+
+    // Initialize (Default to English)
+    // Optional: Auto-detect
+    // const userLang = navigator.language.startsWith('zh') ? 'zh' : 'en';
+    // langSelect.value = userLang;
+    // updateLanguage(userLang);
+
+
     const input = document.getElementById('inputArea');
     const score = document.getElementById('score');
     const printBtn = document.getElementById('printBtn');
@@ -10,15 +127,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const beatsPerBarInput = document.getElementById('beatsPerBar');
     const beatUnitInput = document.getElementById('beatUnit');
     const measuresPerRowInput = document.getElementById('measuresPerRow');
-    const scaleSlider = document.getElementById('scaleSlider');
+    // const scaleSlider = document.getElementById('scaleSlider'); // Removed
+    const zoomInBtn = document.getElementById('zoomIn');
+    const zoomOutBtn = document.getElementById('zoomOut');
+    const zoomValueSpan = document.getElementById('zoomValue');
+    let currentZoom = 7.4; // Default px
+
     const keySignatureInput = document.getElementById('keySignature');
+
+    // Default title is set by init updateLanguage('en')
 
     const inputs = [input, titleInput, beatsPerBarInput, beatUnitInput, measuresPerRowInput, keySignatureInput];
     inputs.forEach(el => el.addEventListener('input', debounce(render, 300))); // Debounce for performance
 
-    // Zoom Slider Listener - Instant update
-    scaleSlider.addEventListener('input', () => {
-        score.style.fontSize = `${scaleSlider.value}px`;
+    // Zoom Logic
+    function updateZoomDisplay() {
+        score.style.fontSize = `${currentZoom}px`;
+        zoomValueSpan.textContent = `${currentZoom.toFixed(1)}px`;
+    }
+
+    zoomInBtn.addEventListener('click', () => {
+        if (currentZoom < 80) {
+            currentZoom = Math.min(80, currentZoom + 0.2);
+            updateZoomDisplay();
+        }
+    });
+
+    zoomOutBtn.addEventListener('click', () => {
+        if (currentZoom > 5) {
+            currentZoom = Math.max(5, currentZoom - 0.2);
+            updateZoomDisplay();
+        }
     });
 
     // Key Signature Listener - Instant update (change event is safer for select)
@@ -33,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
             beatsPerBar: beatsPerBarInput.value,
             beatUnit: beatUnitInput.value,
             measuresPerRow: measuresPerRowInput.value,
-            fontSize: scaleSlider.value, // Save Zoom Level
+            fontSize: currentZoom, // Save Zoom Level
             keySignature: keySignatureInput.value, // Save Key
             content: input.value
         };
@@ -100,8 +239,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (projectData.beatUnit !== undefined) beatUnitInput.value = projectData.beatUnit;
                 if (projectData.measuresPerRow !== undefined) measuresPerRowInput.value = projectData.measuresPerRow;
                 if (projectData.fontSize !== undefined) {
-                    scaleSlider.value = projectData.fontSize;
-                    score.style.fontSize = `${projectData.fontSize}px`;
+                    currentZoom = parseFloat(projectData.fontSize) || 16;
+                    updateZoomDisplay();
                 }
                 if (projectData.keySignature !== undefined) keySignatureInput.value = projectData.keySignature;
                 if (projectData.content !== undefined) input.value = projectData.content;
@@ -128,6 +267,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial render
     render();
+
+    // Set initial active state after all elements are defined
+    updateLanguage('en');
 
     function debounce(func, wait) {
         let timeout;
@@ -160,72 +302,61 @@ document.addEventListener('DOMContentLoaded', () => {
         // Reset font size to measure normally first
         score.style.fontSize = '16px';
 
+        // Check if there is content in the editor
+        if (!input.value.trim()) {
+            // 6. Apply Zoom (Still apply so title size is correct?)
+            // Actually title size depends on zoom? Yes.
+            score.style.fontSize = `${currentZoom}px`;
+            return;
+        }
+
         // 1. Show Time Signature
         const timeSigEl = document.createElement('div');
         timeSigEl.className = 'time-signature-row';
         timeSigEl.textContent = `1=${keySig} ${beatsPerBar}/${beatUnit}`;
         score.appendChild(timeSigEl);
 
-        // 2. Parse Input into Blocks (Music vs Lyrics)
+        // 2. Parse Input Stream
         const lines = input.value.split('\n');
-        const blocks = [];
-        let currentBlock = null;
 
-        lines.forEach(line => {
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
             const trimmed = line.trim();
+            if (!trimmed) continue;
 
-            // Handle Blank Lines for Lyrics merging
-            if (trimmed === '') {
-                if (currentBlock && currentBlock.type === 'lyrics') {
-                    return; // Ignore blank lines within a lyrics block
+            if (trimmed.startsWith('##')) {
+                // If we hit a lyrics line that wasn't consumed by a previous music line, ignore it or warn?
+                // For now, just continue, as we expect Music then Lyrics.
+                continue;
+            } else {
+                // Music line found
+                // Check next lines for lyrics
+                let lyricLines = [];
+                let offset = 1;
+                while (i + offset < lines.length) {
+                    const nextLine = lines[i + offset].trim();
+                    if (nextLine.startsWith('##')) {
+                        const lLine = nextLine.substring(2).trim();
+                        // Parse tokens
+                        const tokens = lLine.split(/\s+/).filter(t => t.length > 0);
+                        lyricLines.push(tokens);
+                        offset++;
+                    } else {
+                        break;
+                    }
                 }
+                // Skip the consumed lyric lines in the main loop
+                i += (offset - 1);
+
+                renderMusicSection(score, line, { beatsPerBar, measuresPerRow, beatsPerBar }, lyricLines);
             }
+        }
 
-            const isLyrics = trimmed.startsWith('##');
-            const type = isLyrics ? 'lyrics' : 'music';
-
-            if (!currentBlock || currentBlock.type !== type) {
-                if (currentBlock) blocks.push(currentBlock);
-                currentBlock = { type: type, lines: [] };
-            }
-
-            if (type === 'lyrics') {
-                // Remove the '##' marker for display
-                // Do NOT trim the result to preserve user's alignment spaces
-                currentBlock.lines.push(trimmed.substring(2));
-            } else {
-                // Music or Empty line in music context
-                if (trimmed) currentBlock.lines.push(line);
-            }
-        });
-        if (currentBlock) blocks.push(currentBlock);
-
-        // 3. Render Blocks
-        blocks.forEach(block => {
-            if (block.type === 'lyrics') {
-                const lyricsDiv = document.createElement('div');
-                lyricsDiv.className = 'lyrics-block';
-                block.lines.forEach(lText => {
-                    const p = document.createElement('p');
-                    p.className = 'lyrics-line';
-                    p.textContent = lText || '\u00A0'; // Non-breaking space for empty lines
-                    lyricsDiv.appendChild(p);
-                });
-                score.appendChild(lyricsDiv);
-            } else {
-                // Music Block
-                const musicText = block.lines.join('\n'); // Join with newlines to preserve measure breaks
-                renderMusicSection(score, musicText, { beatsPerBar, measuresPerRow, beatsPerBar });
-                // Wait, need beatsPerBar for validity check.
-            }
-        });
-
-        // 6. Apply Zoom from Slider
-        const fontSize = parseInt(scaleSlider.value) || 7;
-        score.style.fontSize = `${fontSize}px`;
+        // 6. Apply Zoom (Now handled by state, but re-applying acts as safe-guard or init)
+        score.style.fontSize = `${currentZoom}px`;
     }
 
-    function renderMusicSection(container, text, config) {
+    function renderMusicSection(container, text, config, lyricLines) {
         const { beatsPerBar, measuresPerRow } = config;
 
         // 2. Parse Input into Measures
@@ -299,7 +430,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!ct) return;
                     const group = parseTokenToNotes(ct);
                     if (group.notes.length > 0) {
-                        currentMeasure.content.push({ type: 'group', data: group });
+                        // Assign Lyrics from each line
+                        let extractedLyrics = [];
+                        if (lyricLines && lyricLines.length > 0) {
+                            extractedLyrics = lyricLines.map(queue => {
+                                return (queue && queue.length > 0) ? queue.shift() : null;
+                            });
+                        }
+                        // Only add if there are actual lyrics
+                        const hasLyrics = extractedLyrics.some(l => l !== null);
+                        currentMeasure.content.push({ type: 'group', data: group, lyrics: hasLyrics ? extractedLyrics : null });
                     } else if (ct.match(/^-+$/)) {
                         for (let i = 0; i < ct.length; i++) {
                             currentMeasure.content.push({ type: 'dash' });
@@ -374,6 +514,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Add beams
                 addBeams(groupContainer, item.data.notes);
+
+                // Add Lyrics
+                if (item.lyrics && item.lyrics.length > 0) {
+                    const lyricContainer = document.createElement('div');
+                    lyricContainer.className = 'lyric-container';
+
+                    item.lyrics.forEach(text => {
+                        const rowEl = document.createElement('div');
+                        rowEl.className = 'lyric-row';
+
+                        // Handle '--' token -> Treat as empty (hide)
+                        const displayContent = (text === '--') ? null : text;
+
+                        // Use non-breaking space for empty/null lyrics to preserve height vertical alignment
+                        rowEl.textContent = displayContent || '\u00A0';
+                        lyricContainer.appendChild(rowEl);
+                    });
+
+                    groupContainer.appendChild(lyricContainer);
+                }
+
                 container.appendChild(groupContainer);
 
             } else if (item.type === 'dash') {
@@ -507,28 +668,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* Draggable UI Logic */
 const gutter = document.getElementById('gutter');
-const editorPane = document.getElementById('editorPane');
+const previewPane = document.getElementById('previewPane'); // Target Preview Pane height
 const container = document.querySelector('.container');
 let isResizing = false;
 
 gutter.addEventListener('mousedown', (e) => {
     isResizing = true;
-    // Add class to body to keep cursor consistent
-    document.body.style.cursor = 'col-resize';
+    document.body.style.cursor = 'row-resize';
     e.preventDefault(); // Prevent text selection
 });
 
 document.addEventListener('mousemove', (e) => {
     if (!isResizing) return;
 
-    // Calculate new width relative to container
+    // Calculate new height relative to container top
     const containerRect = container.getBoundingClientRect();
-    const newWidth = e.clientX - containerRect.left;
+    const newHeight = e.clientY - containerRect.top;
 
-    // Limits (min 200px, max container width - 200px)
-    if (newWidth > 200 && newWidth < containerRect.width - 200) {
-        editorPane.style.width = `${newWidth}px`;
-        // Since editorPane has width set, and previewPane is flex:1, layout adjusts automatically.
+    // Limits (min 100px, max container height - 100px)
+    if (newHeight > 100 && newHeight < containerRect.height - 100) {
+        previewPane.style.height = `${newHeight}px`;
     }
 });
 
@@ -536,7 +695,6 @@ document.addEventListener('mouseup', () => {
     if (isResizing) {
         isResizing = false;
         document.body.style.cursor = 'default';
-        // Trigger resize observer to update font scale if needed
-        // The ResizeObserver on .paper (or .score parent) should handle this automatically!
+        // ResizeObserver automatically handles content adjustments
     }
 });

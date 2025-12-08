@@ -12,8 +12,11 @@
 - **列印 / PDF 匯出**：針對列印最佳化的樣式，可輸出高品質 PDF（修正了連音線的顯示）。
 - **縮放控制**：透過滑桿調整簡譜的大小（預設為緊湊大小）。
 - **調號選擇**：可從下拉選單選擇調號（如 `1=C`、`1=G`）。
-- **歌詞與文字**：支援歌詞輸入，並自動調整行距與對齊。
+- **調號選擇**：可從下拉選單選擇調號（如 `1=C`、`1=G`）。
+- **歌詞與文字**：支援多行歌詞輸入，自動對齊音符，並支援空白佔位符。
 - **自訂設定**：可設定曲名、每小節拍數及每行小節數。
+- **介面語言**：支援 English 與 繁體中文 切換。
+- **垂直佈局**：預覽在上方，編輯區在下方，支援拖曳調整高度。
 
 ## 使用指南
 
@@ -38,18 +41,22 @@
   - 範例：`|: 1 2 3 4 :|`
 
 ### 歌詞 / 文字區塊
-在行首加上 `##` 即可將該行視為歌詞或文字行。
-- 連續的 `##` 行會被群組在一起，行距較緊密。
-- **忽略空白行**：在歌詞行之間的空白行會被自動忽略，讓您可以自由排版而不影響顯示。
-- **自動對齊**：歌詞行靠左對齊，且與樂譜保持適當間距。
+在音符行下方，使用以 `##` 開頭的行來輸入歌詞。
+- **自動對齊**：歌詞會被切分成單字（Token），並依序分配給該行的音符群組。
+- **靠左對齊**：歌詞會靠左對齊對應的音符群組。
+- **多段歌詞**：連續多行 `##` 可建立多段歌詞（Verses），垂直堆疊顯示。
+- **空白佔位符**：使用 `--` 代表該音符下方不顯示歌詞（但保留位置）。
 
 範例：
 ```text
-1 2 3 4
-## 這是第一段歌詞
-## 歌詞會靠左對齊
-5 6 7 8
+1 2 3
+## Do Re Mi
+## A B C
+## X -- Z
 ```
+- `1` 下方會顯示 "Do", "A", "X" (堆疊)
+- `2` 下方會顯示 "Re", "B" (空白)
+- `3` 下方會顯示 "Mi", "C", "Z"
 
 ### 範例代碼
 ```text
@@ -79,8 +86,10 @@ A simple, lightweight web tool for creating, editing, and printing Jianpu (numbe
 - **Print / PDF Export**: Optimized print styles for high-quality PDF output (with correct beam rendering).
 - **Zoom Control**: Adjust the size of the music notes (defaults to compact size).
 - **Key Signature**: Select the musical key (e.g., `1=C`, `1=G`) from the dropdown.
-- **Lyrics Blocks**: Support for lyrics with smart spacing and grouping.
+- **Lyrics & Text**: Supports multiple stacked verses, automatic lyric token alignment to notes, and empty tokens.
 - **Customizable**: Set Song Title, Beats per Bar, and Measures per Row.
+- **Vertical Layout**: Preview pane on top, Editor pane on bottom, with resizable divider.
+- **Localization**: Switch between English and Traditional Chinese.
 
 ## Usage Guide
 
@@ -105,16 +114,20 @@ Type notes using numbers `1-7` and `0` for rests.
   - Example: `|: 1 2 3 4 :|`
 
 ### Lyrics / Text Blocks
-Start a line with `##` to treat it as a lyrics or text line. Recursive lines starting with `##` will be grouped together with tighter spacing.
-- **Blank Lines**: Blank lines between lyrics lines are ignored.
-- **Alignment**: Lyrics are left-aligned.
+Add lines starting with `##` *immediately after* a line of music notes.
+- **Note Alignment**: The lyrics are tokenized (split by spaces) and assigned to the note groups in the line above.
+- **Left Aligned**: Each lyric token is left-aligned with its note group.
+- **Multiple Verses**: Use multiple consecutive `##` lines to add stacked verses.
+- **Empty Token**: Use `--` to skip a lyric slot (display nothing) while maintaining alignment.
 
 ```text
-1 2 3 4
-## This is verse 1
-## The lyrics are here
-5 6 7 8
+1 2 3
+## Verse1_A Verse1_B Verse1_C
+## Verse2_A --       Verse2_C
 ```
+- Under `1`: "Verse1_A" and "Verse2_A"
+- Under `2`: "Verse1_B" (and empty space)
+- Under `3`: "Verse1_C" and "Verse2_C"
 
 ### Example
 ```text
