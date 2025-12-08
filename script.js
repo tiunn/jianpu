@@ -191,7 +191,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (type === 'lyrics') {
                 // Remove the '##' marker for display
-                currentBlock.lines.push(trimmed.substring(2).trim());
+                // Do NOT trim the result to preserve user's alignment spaces
+                currentBlock.lines.push(trimmed.substring(2));
             } else {
                 // Music or Empty line in music context
                 if (trimmed) currentBlock.lines.push(line);

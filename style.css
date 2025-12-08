@@ -204,9 +204,9 @@ textarea:focus {
 .lyrics-block {
     width: 100%;
     text-align: left;
-    /* Alignment changed to left as requested */
-    margin: 3em 0;
-    /* Consistent spacing (3em = lyrics font size) */
+    margin-top: 4.5em;
+    margin-bottom: 4.5em;
+    /* 1.5x lyrics font size (3em * 1.5 = 4.5em) */
 }
 
 /* Spacing Logic Adjustments */
@@ -242,6 +242,8 @@ textarea:focus {
     /* Match Note Weight */
     font-family: var(--font-ui);
     color: #333;
+    white-space: pre-wrap;
+    /* Preserve spaces for manual alignment */
 }
 
 /* Time Signature Row */
@@ -261,8 +263,8 @@ textarea:focus {
 .system-row {
     display: flex;
     width: 100%;
-    margin-top: 9em;
-    /* 3x Score Row Height (3 * 3em) as requested */
+    margin-top: 12em;
+    /* 3x Score Row Height (Estimated 4em * 3 = 12em) */
     margin-bottom: 0;
     border-right: 2px solid black;
 
