@@ -39,7 +39,8 @@
 - **換行**：按 `Enter` 鍵會視為新的小節開始。
 - **反覆記號**：使用 `|:` 開始反覆，`:|` 結束反覆。
   - 範例：`|: 1 2 3 4 :|`
-
+- **節拍檢查**：如果小節內 Note 的總拍數與設定的拍號不符，該小節代碼會以紅色顯示。
+- **音組分隔**：請使用空格來分隔每個音組 (Note Group)。
 ### 歌詞 / 文字區塊
 在音符行下方，使用以 `##` 開頭的行來輸入歌詞。
 - **自動對齊**：歌詞會被切分成單字（Token），並依序分配給該行的音符群組。
@@ -112,6 +113,8 @@ Type notes using numbers `1-7` and `0` for rests.
 - **New Lines**: Pressing `Enter` automatically starts a new measure.
 - **Repeat Signs**: Use `|:` to start a repeat and `:|` to end it.
   - Example: `|: 1 2 3 4 :|`
+- **Beat Validation**: If the total beats in a measure do not match the time signature, the measure code will be displayed in red.
+- **Note Separation**: Please use spaces to separate note groups.
 
 ### Lyrics / Text Blocks
 Add lines starting with `##` *immediately after* a line of music notes.
