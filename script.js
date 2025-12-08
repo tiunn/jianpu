@@ -172,9 +172,15 @@ document.addEventListener('DOMContentLoaded', () => {
         let currentBlock = null;
 
         lines.forEach(line => {
-            // Trim for check? Or keep indentation? 
-            // User: "start with ##". 
             const trimmed = line.trim();
+
+            // Handle Blank Lines for Lyrics merging
+            if (trimmed === '') {
+                if (currentBlock && currentBlock.type === 'lyrics') {
+                    return; // Ignore blank lines within a lyrics block
+                }
+            }
+
             const isLyrics = trimmed.startsWith('##');
             const type = isLyrics ? 'lyrics' : 'music';
 
@@ -187,12 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Remove the '##' marker for display
                 currentBlock.lines.push(trimmed.substring(2).trim());
             } else {
-                // Keep music lines as is (preserving internal spaces, but maybe trimming ends)
-                // Actually, existing music parser splits by whitespace, so spaces don't matter much.
-                // We'll just push the raw line to preserve delimiters if they are line-based.
-                // But we should filter empty lines if they are not intentional spacers?
-                // Existing logic: .replace(/\n/g, ' ') -> joined all lines.
-                // So here we accumulate all "music" lines into one text blob for that block.
+                // Music or Empty line in music context
                 if (trimmed) currentBlock.lines.push(line);
             }
         });
@@ -212,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 score.appendChild(lyricsDiv);
             } else {
                 // Music Block
-                const musicText = block.lines.join(' '); // Join with space like before
+                const musicText = block.lines.join('\n'); // Join with newlines to preserve measure breaks
                 renderMusicSection(score, musicText, { beatsPerBar, measuresPerRow, beatsPerBar });
                 // Wait, need beatsPerBar for validity check.
             }
