@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
         en: {
             appTitle: "Jianpu Editor",
             appSubtitle: "Simple Numbered Musical Notation",
+            helpBtn: "❓ Help",
             loadBtn: "📂 Load",
             saveBtn: "💾 Save",
             printBtn: "🖨️ Print / PDF",
@@ -28,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
         zh: {
             appTitle: "簡譜編輯器",
             appSubtitle: "簡易數字樂譜編輯器",
+            helpBtn: "❓ 使用說明",
             loadBtn: "📂 讀取",
             saveBtn: "💾 儲存",
             printBtn: "🖨️ 列印 / PDF",
@@ -121,7 +123,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const printBtn = document.getElementById('printBtn');
     const saveBtn = document.getElementById('saveBtn');
     const loadBtn = document.getElementById('loadBtn');
+    const helpBtn = document.getElementById('helpBtn');
     const loadFileInput = document.getElementById('loadFileInput');
+
+    helpBtn.addEventListener('click', () => {
+        window.open('https://github.com/tiunn/jianpu', '_blank');
+    });
 
     const titleInput = document.getElementById('titleInput');
     const beatsPerBarInput = document.getElementById('beatsPerBar');
@@ -269,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
     render();
 
     // Set initial active state after all elements are defined
-    updateLanguage('en');
+    updateLanguage('zh');
 
     function debounce(func, wait) {
         let timeout;
