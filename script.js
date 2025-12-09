@@ -16,6 +16,9 @@ document.addEventListener('DOMContentLoaded', () => {
             zoomInBtn: "Zoom In",
             zoomOutBtn: "Zoom Out",
             keyLabel: "Key:",
+            lyricistLabel: "Lyricist:",
+            composerLabel: "Composer:",
+            subtitleLabel: "Subtitle:",
             inputAreaPh: "Type notes here...",
             previewTitle: "Preview",
             defaultSongTitle: "Song Title",
@@ -32,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
             helpBtn: "❓ 使用說明",
             loadBtn: "📂 讀取",
             saveBtn: "💾 儲存",
-            printBtn: "🖨️ 列印 / PDF",
+            printBtn: "🖨️ 列印 / / PDF",
             inputCode: "輸入代碼",
             songTitlePh: "歌曲標題",
             beatsLabel: "拍號:",
@@ -41,6 +44,9 @@ document.addEventListener('DOMContentLoaded', () => {
             zoomInBtn: "放大",
             zoomOutBtn: "縮小",
             keyLabel: "調號:",
+            lyricistLabel: "作詞:",
+            composerLabel: "作曲:",
+            subtitleLabel: "附註:",
             inputAreaPh: "在此輸入音符...",
             previewTitle: "預覽",
             defaultSongTitle: "歌曲標題",
@@ -134,38 +140,59 @@ document.addEventListener('DOMContentLoaded', () => {
     const beatsPerBarInput = document.getElementById('beatsPerBar');
     const beatUnitInput = document.getElementById('beatUnit');
     const measuresPerRowInput = document.getElementById('measuresPerRow');
-    // const scaleSlider = document.getElementById('scaleSlider'); // Removed
-    const zoomInBtn = document.getElementById('zoomIn');
-    const zoomOutBtn = document.getElementById('zoomOut');
-    const zoomValueSpan = document.getElementById('zoomValue');
+    // const zoomOutBtn = document.getElementById('zoomOut'); // Removed
+    const zoomSlider = document.getElementById('zoomSlider');
+    const zoomInput = document.getElementById('zoomInput');
+
     let currentZoom = 7.4; // Default px
 
     const keySignatureInput = document.getElementById('keySignature');
+    const lyricistInput = document.getElementById('lyricistInput');
+    const composerInput = document.getElementById('composerInput');
+    const subtitleInput = document.getElementById('subtitleInput');
 
     // Default title is set by init updateLanguage('en')
 
-    const inputs = [input, titleInput, beatsPerBarInput, beatUnitInput, measuresPerRowInput, keySignatureInput];
+    const inputs = [input, titleInput, beatsPerBarInput, beatUnitInput, measuresPerRowInput, keySignatureInput, lyricistInput, composerInput, subtitleInput];
     inputs.forEach(el => el.addEventListener('input', debounce(render, 300))); // Debounce for performance
 
     // Zoom Logic
-    function updateZoomDisplay() {
+    function updateZoom(newVal, source) {
+        let val = parseFloat(newVal);
+        if (isNaN(val)) val = 7.4;
+
+        // Clamp logic
+        val = Math.max(5, Math.min(50, val)); // Clamp to min/max
+        currentZoom = val;
+
         score.style.fontSize = `${currentZoom}px`;
-        zoomValueSpan.textContent = `${currentZoom.toFixed(1)}px`;
+
+        // Sync Controls
+        if (source !== zoomSlider) {
+            zoomSlider.value = currentZoom;
+        }
+        if (source !== zoomInput) {
+            zoomInput.value = currentZoom.toFixed(1);
+        }
     }
 
-    zoomInBtn.addEventListener('click', () => {
-        if (currentZoom < 80) {
-            currentZoom = Math.min(80, currentZoom + 0.2);
-            updateZoomDisplay();
-        }
+    // Slider Listener
+    zoomSlider.addEventListener('input', (e) => {
+        updateZoom(e.target.value, zoomSlider);
     });
 
-    zoomOutBtn.addEventListener('click', () => {
-        if (currentZoom > 5) {
-            currentZoom = Math.max(5, currentZoom - 0.2);
-            updateZoomDisplay();
-        }
+    // Number Input Listener
+    zoomInput.addEventListener('input', (e) => {
+        updateZoom(e.target.value, zoomInput);
     });
+
+    // Number Input Change (to force formatting on blur/enter)
+    zoomInput.addEventListener('change', (e) => {
+        updateZoom(e.target.value, null); // Pass null to force update of input
+    });
+
+    // Initial Sync
+    updateZoom(currentZoom, null);
 
     // Key Signature Listener - Instant update (change event is safer for select)
     keySignatureInput.addEventListener('change', render);
@@ -176,6 +203,9 @@ document.addEventListener('DOMContentLoaded', () => {
     saveBtn.addEventListener('click', async () => {
         const projectData = {
             title: titleInput.value,
+            lyricist: lyricistInput.value,
+            composer: composerInput.value,
+            subtitle: subtitleInput.value,
             beatsPerBar: beatsPerBarInput.value,
             beatUnit: beatUnitInput.value,
             measuresPerRow: measuresPerRowInput.value,
@@ -242,12 +272,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Populate fields
                 if (projectData.title !== undefined) titleInput.value = projectData.title;
+                if (projectData.lyricist !== undefined) lyricistInput.value = projectData.lyricist;
+                if (projectData.composer !== undefined) composerInput.value = projectData.composer;
+                if (projectData.subtitle !== undefined) subtitleInput.value = projectData.subtitle;
                 if (projectData.beatsPerBar !== undefined) beatsPerBarInput.value = projectData.beatsPerBar;
                 if (projectData.beatUnit !== undefined) beatUnitInput.value = projectData.beatUnit;
                 if (projectData.measuresPerRow !== undefined) measuresPerRowInput.value = projectData.measuresPerRow;
                 if (projectData.fontSize !== undefined) {
                     currentZoom = parseFloat(projectData.fontSize) || 16;
-                    updateZoomDisplay();
+                    updateZoom(currentZoom);
                 }
                 if (projectData.keySignature !== undefined) keySignatureInput.value = projectData.keySignature;
                 if (projectData.content !== undefined) input.value = projectData.content;
@@ -317,19 +350,64 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // 1. Show Time Signature
+        // 1. Meta Row (Time Sig + Creators)
+        const metaRow = document.createElement('div');
+        metaRow.className = 'meta-row';
+
+        // Left: Time Signature
         const timeSigEl = document.createElement('div');
-        timeSigEl.className = 'time-signature-row';
+        timeSigEl.className = 'time-signature';
         timeSigEl.textContent = `1=${keySig} ${beatsPerBar}/${beatUnit}`;
-        score.appendChild(timeSigEl);
+        metaRow.appendChild(timeSigEl);
+
+        // Right: Creators (Lyricist, Composer)
+        const lyricist = lyricistInput.value.trim();
+        const composer = composerInput.value.trim();
+
+        if (lyricist || composer) {
+            const creatorsEl = document.createElement('div');
+            creatorsEl.className = 'creators-info';
+
+            if (lyricist) {
+                const lEl = document.createElement('div');
+                lEl.textContent = `作詞: ${lyricist}`;
+                creatorsEl.appendChild(lEl);
+            }
+            if (composer) {
+                const cEl = document.createElement('div');
+                cEl.textContent = `作曲: ${composer}`;
+                creatorsEl.appendChild(cEl);
+            }
+            metaRow.appendChild(creatorsEl);
+        }
+
+        score.appendChild(metaRow);
+
+        // Subtitle (Below Meta Row)
+        const subtitle = subtitleInput.value.trim();
+        if (subtitle) {
+            const subEl = document.createElement('div');
+            subEl.className = 'score-subtitle';
+            subEl.textContent = subtitle;
+            score.appendChild(subEl);
+        }
+
+        // 3. Render Measures (Pass 1)
+        // ... (existing line processing)
 
         // 2. Parse Input Stream
         const lines = input.value.split('\n');
 
         for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
+            let line = lines[i];
             const trimmed = line.trim();
             if (!trimmed) continue;
+
+            // Preprocess slurs: Ensure ~> (start) has space after, and <~ (end) has space before
+            // This handles cases like q3~><~q4 -> q3~> <~q4 -> split correctly
+            // REVERTED: We now handle this in the tokenizer regex directly to preserve beaming.
+            // line = line.replace(/~>/g, '~> ');
+            // line = line.replace(/<~/g, ' <~');
 
             if (trimmed.startsWith('##')) {
                 // If we hit a lyrics line that wasn't consumed by a previous music line, ignore it or warn?
@@ -361,6 +439,164 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 6. Apply Zoom (Now handled by state, but re-applying acts as safe-guard or init)
         score.style.fontSize = `${currentZoom}px`;
+
+        // Draw Slurs after DOM is fully constructed
+        drawSlurs();
+    } // End of render
+
+    // Observer to ensure slurs redraw when layout changes (e.g. wrapper size change)
+    const scoreResizeObserver = new ResizeObserver(() => {
+        // Debounce or just call?
+        // simple requestAnimationFrame to throttle
+        requestAnimationFrame(drawSlurs);
+    });
+    scoreResizeObserver.observe(score);
+
+    function drawSlurs() {
+        // Use double requestAnimationFrame to ensure DOM layout and reflow is settled
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                _drawSlursInternal();
+            });
+        });
+    }
+
+    function _drawSlursInternal() {
+        // Remove existing layer
+        const existing = score.querySelector('.slur-layer');
+        if (existing) existing.remove();
+
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'slur-layer');
+
+        // Ensure SVG covers the entire scrollable area of the score
+        // We use Math.max to handle cases where content might be smaller than container
+        svg.style.width = Math.max(score.scrollWidth, score.clientWidth) + 'px';
+        svg.style.height = Math.max(score.scrollHeight, score.clientHeight) + 'px';
+
+        score.style.position = 'relative';
+        score.appendChild(svg);
+
+        // Find all NOTE groups (individual notes now carry the flags)
+        // This supports slurs within a beamed group
+        const noteGroups = Array.from(score.querySelectorAll('.note-group'));
+
+        // Score Rect for relative coords
+        const scoreRect = score.getBoundingClientRect();
+
+        let pendingSlurs = []; // Stack of {x, y, systemRowEl}
+
+        noteGroups.forEach(el => {
+            const isStart = el.dataset.slurStart === 'true';
+            const isEnd = el.dataset.slurEnd === 'true';
+
+            if (isStart) {
+                // Get coords
+                // Note-group contains .note-content.
+                // We can query selector, or just use the el itself if we positioned logic relative to note-group?
+                // Logic uses .note-content inside.
+                const contentEl = el.querySelector('.note-content');
+                if (!contentEl) return;
+
+                const rect = contentEl.getBoundingClientRect();
+                // Top center of the note number
+                const x = rect.left + rect.width / 2 - scoreRect.left;
+
+                // Position start point:
+                // Move Y higher: -1.5 * currentZoom (Restored as requested)
+                const y = rect.top - scoreRect.top - (currentZoom * 1.5);
+
+                // Track system row to detect cross-line
+                const systemRow = el.closest('.system-row');
+
+                pendingSlurs.push({ x, y, systemRow });
+            }
+
+            if (isEnd) {
+                if (pendingSlurs.length === 0) return; // Unmatched end
+
+                const start = pendingSlurs.pop();
+
+                // Get end coords
+                const rect = el.querySelector('.note-content').getBoundingClientRect();
+                const x = rect.left + rect.width / 2 - scoreRect.left;
+                const y = rect.top - scoreRect.top - (currentZoom * 1.5);
+
+                const endSystemRow = el.closest('.system-row');
+
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('class', 'slur-path');
+
+                if (start.systemRow === endSystemRow) {
+                    // Same line
+                    const midX = (start.x + x) / 2;
+                    // Distance factor
+                    const dist = Math.abs(x - start.x);
+
+                    // Increased curvature
+                    // Min height: zoom * 0.6. Max height: zoom * 2.0.
+                    // Factor: dist * 0.25
+                    let archHeight = Math.min(currentZoom * 2.0, dist * 0.25);
+                    archHeight = Math.max(currentZoom * 0.6, archHeight);
+
+                    const cpY = Math.min(start.y, y) - archHeight;
+
+                    // Create filled path with variable width
+                    const thinWidth = currentZoom * 0.08;
+                    const thickWidth = currentZoom * 0.25;
+
+                    const upperD = `M ${start.x} ${start.y - thinWidth} Q ${midX} ${cpY - thickWidth} ${x} ${y - thinWidth}`;
+                    const lowerD = `L ${x} ${y + thinWidth} Q ${midX} ${cpY + thickWidth} ${start.x} ${start.y + thinWidth} Z`;
+
+                    path.setAttribute('d', upperD + ' ' + lowerD);
+                    path.setAttribute('fill', '#333');
+                    path.setAttribute('stroke', 'none');
+                    svg.appendChild(path);
+                } else {
+                    // Cross line
+                    const startRowRect = start.systemRow ? start.systemRow.getBoundingClientRect() : null;
+                    const relRightX = startRowRect ? (startRowRect.right - scoreRect.left) : (scoreRect.width);
+
+                    const thinWidth = currentZoom * 0.08;
+                    const thickWidth = currentZoom * 0.20;
+
+                    // Curve 1 (Start -> Right)
+                    const startEndX = relRightX - 10;
+                    // Raise the end point at the system break to look like a half-arch
+                    const startEndY = start.y - (currentZoom * 1.0);
+                    const startMidX = (start.x + startEndX) / 2;
+                    const startCpY = start.y - (currentZoom * 1.5); // Higher control point
+
+                    const upperD1 = `M ${start.x} ${start.y - thinWidth} Q ${startMidX} ${startCpY - thickWidth} ${startEndX} ${startEndY - thinWidth}`;
+                    const lowerD1 = `L ${startEndX} ${startEndY + thinWidth} Q ${startMidX} ${startCpY + thickWidth} ${start.x} ${start.y + thinWidth} Z`;
+
+                    const path1 = path.cloneNode();
+                    path1.setAttribute('d', upperD1 + ' ' + lowerD1);
+                    path1.setAttribute('fill', '#333');
+                    path1.setAttribute('stroke', 'none');
+                    svg.appendChild(path1);
+
+                    // Curve 2 (Left -> End)
+                    const endRowRect = endSystemRow ? endSystemRow.getBoundingClientRect() : null;
+                    const relLeftX = endRowRect ? (endRowRect.left - scoreRect.left) : 0;
+
+                    const endStartX = relLeftX + 10;
+                    // Start high at the system break
+                    const endStartY = y - (currentZoom * 1.0);
+                    const endMidX = (endStartX + x) / 2;
+                    const endCpY = y - (currentZoom * 1.5); // Higher control point
+
+                    const upperD2 = `M ${endStartX} ${endStartY - thinWidth} Q ${endMidX} ${endCpY - thickWidth} ${x} ${y - thinWidth}`;
+                    const lowerD2 = `L ${x} ${y + thinWidth} Q ${endMidX} ${endCpY + thickWidth} ${endStartX} ${endStartY + thinWidth} Z`;
+
+                    const path2 = path.cloneNode();
+                    path2.setAttribute('d', upperD2 + ' ' + lowerD2);
+                    path2.setAttribute('fill', '#333');
+                    path2.setAttribute('stroke', 'none');
+                    svg.appendChild(path2);
+                }
+            }
+        });
     }
 
     function renderMusicSection(container, text, config, lyricLines) {
@@ -513,6 +749,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const groupContainer = document.createElement('div');
                 groupContainer.className = 'beam-group';
 
+                // Attributes are now on individual notes (created in createNoteElement)
+
                 // Render Group logic
                 item.data.notes.forEach(note => {
                     const noteEl = createNoteElement(note);
@@ -552,19 +790,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Reuse parsing logic
     function parseTokenToNotes(token) {
-        // Regex global match
-        // Group 1: Rhythm (prefix q/s)
-        // Group 2: Accidental (# or b) - NEW
-        // Group 3: Note Body (0-7)
-        // Group 4: Suffixes (octaves ' or , or dotted .)
-        const noteRegex = /([qs]*)([#b]?)([0-7])(['+,+\.]*)/g;
+        // Parse token into notes. Token can be a beamed group "q1q2".
+        // New Syntax support: ~> is suffix, <~ is prefix.
+        // Regex needs to capture these attached to specific notes.
+        // Group 1: Slur End Prefix (<~)
+        // Group 2: Rhythm (prefix q/s)
+        // Group 3: Accidental (# or b)
+        // Group 4: Note Body (0-7)
+        // Group 5: Suffixes (octaves ' or , or dotted .)
+        // Group 6: Slur Start Suffix (~>)
+
+        const noteRegex = /((?:<~)?)([qs]*)([#b]?)([0-7])(['+,+\.]*)((?:~>)?)/g;
+
         const matches = [...token.matchAll(noteRegex)];
 
+        // Validation: verify if we consumed the important parts
+        // Simple check: if token contains ~ but no ~> or <~ matched, or if we have leftovers
+        // Actually, just checking if the reconstructed string matches token is safer?
+        // Or check if input token had ~ that wasn't matched.
+        let matchedSlurs = 0;
+
         const notes = matches.map(m => {
-            const prefix = m[1];
-            const accidental = m[2]; // Captured accidental
-            const body = m[3];
-            const suffix = m[4];
+            const slurEndStr = m[1]; // <~
+            const prefix = m[2];
+            const accidental = m[3];
+            const body = m[4];
+            const suffix = m[5];
+            const slurStartStr = m[6]; // ~>
+
+            if (slurEndStr) matchedSlurs++;
+            if (slurStartStr) matchedSlurs++;
 
             let duration = 1;
             let lines = 0;
@@ -572,18 +827,57 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (prefix.includes('q')) { duration = 0.5; lines = 1; }
             if (suffix.includes('.')) duration *= 1.5;
 
-            return { body, accidental, lines, suffixes: suffix, duration };
+            return {
+                char: body,
+                accidental,
+                lines,
+                suffixes: suffix,
+                duration,
+                isError: false, // Will verify globally
+                slurStart: !!slurStartStr,
+                slurEnd: !!slurEndStr
+            };
         });
-        return { notes };
+
+        // Error Checking
+        // Count total ~ in original token
+        const totalTildes = (token.match(/~/g) || []).length;
+        // Each <~ or ~> consumes 1 tilde.
+        if (matchedSlurs < totalTildes) {
+            // Unmatched tildes exist!
+            // Mark all notes in this token as error? Or just the first?
+            // Mark all for visibility.
+            notes.forEach(n => n.isError = true);
+
+            // If no notes matched but tildes exist (e.g. "~"), create placeholder
+            if (notes.length === 0) {
+                notes.push({ char: '?', lines: 0, suffixes: '', duration: 1, isError: true, slurStart: false, slurEnd: false });
+            }
+        }
+
+        // Return flattened notes.
+        // The return object structure expected by `parseLine` logic needs to be checked.
+        // Originally returned { notes, slurStart, slurEnd }.
+        // But now slur info is IN the notes.
+        // We can return null/false for the top level flags since they are unused or we remove reliance on them.
+
+        return { notes, slurStart: false, slurEnd: false }; // Deprecated top-level flags
     }
 
     function createNoteElement(note) {
         const container = document.createElement('div');
         container.className = 'note-group';
 
+        // Attach slur attributes specific to this note
+        if (note.slurStart) container.dataset.slurStart = 'true';
+        if (note.slurEnd) container.dataset.slurEnd = 'true';
+
         const content = document.createElement('div');
         content.className = 'note-content';
-        content.textContent = note.body;
+        if (note.isError) {
+            content.classList.add('error-syntax');
+        }
+        content.textContent = note.char;
 
         if (note.accidental) {
             const acc = document.createElement('span');

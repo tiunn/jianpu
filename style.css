@@ -118,6 +118,25 @@ h1 {
     gap: 0.5rem;
 }
 
+.zoom-input {
+    width: 60px;
+    margin: 0 5px;
+    padding: 2px 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+input[type=range] {
+    vertical-align: middle;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-right: 15px;
+}
+
 .help-tooltip {
     position: relative;
     cursor: pointer;
@@ -211,6 +230,24 @@ textarea:focus {
 
 /* --- Jianpu Rendering Styles --- */
 
+/* Slur SVG Layer */
+.slur-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+    /* Above notes, below tooltips if any */
+    overflow: visible;
+}
+
+.slur-path {
+    fill: #333;
+    stroke: none;
+}
+
 /* Lyrics Aligned with Notes */
 .lyric-container {
     position: absolute;
@@ -261,43 +298,82 @@ textarea:focus {
     font-family: var(--font-ui);
 }
 
-/* Time Signature Row */
-.time-signature-row {
+/* Meta Row (Key Sig + Creators) */
+.meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    /* Align top */
     width: 100%;
+    margin-bottom: 0.5em;
+    /* Updated spacing */
+    padding: 0 0.5em;
+    /* Match measure padding visual */
+}
+
+/* Time Signature - Restoring Previous Appearance */
+.time-signature {
     font-family: var(--font-music);
     font-weight: bold;
     font-size: 2.4em;
-    /* 0.8x of Note Font (3em * 0.8 = 2.4em) */
-    margin-bottom: 2.5em;
-    /* Increased spacing (was 0.5em) - requested at least double */
-    padding-left: 0.2em;
+    /* Match previous .time-signature-row size */
     line-height: 1;
+}
+
+/* Lyricist/Composer Info */
+.creators-info {
+    text-align: left;
+    /* User requested left alignment relative to each other */
+    font-family: var(--font-ui);
+    font-size: 2.4em;
+    /* User requested same size as Key Sig (2.4em) */
+    font-weight: bold;
+    /* Match boldness of Key Sig */
+    line-height: 1.2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    /* Left align items in this box */
+    /* The box itself is right-aligned in .meta-row via justify-content: space-between */
+}
+
+.score-subtitle {
+    text-align: left;
+    margin-bottom: 2.5em;
+    /* Space before music */
+    padding-left: 0.5em;
+    /* Align with Key Sig */
+    font-size: 2.4em;
+    /* Match Key Sig size */
+    font-weight: bold;
+    font-family: var(--font-ui);
+    width: 100%;
+}
+
+/* Hide old class if present */
+.time-signature-row {
+    display: none;
 }
 
 /* System Row (Line of Music) */
 .system-row {
     display: flex;
     width: 100%;
-    /* margin-top handled above */
     margin-bottom: 0;
-    border-right: 2px solid black;
-
-    /* End bar line of the row */
-    /* The start bar line is handled by the first measure's left border or a separate element */
-    /* Actually better: each measure has a Left Bar Line. */
     border-right: none;
+    /* End bar is handled by measure last-child */
 }
 
 /* Measure */
 .measure {
     flex: 1;
-    /* Distribute space equally */
     display: flex;
     justify-content: center;
-    /* Center the inner container */
     border-left: 2px solid black;
+    /* Normal Bar Line */
+    border-left-width: 3px;
+    /* Thicker request */
     padding: 0;
-    /* Removing padding, moved to inner */
     position: relative;
     white-space: nowrap;
 }
@@ -309,53 +385,35 @@ textarea:focus {
     align-items: center;
     justify-content: space-between;
     padding: 0.2em 10%;
-    /* 10% horizontal padding relative to measure width */
     box-sizing: border-box;
-    /* Ensure padding is included in width */
 }
 
-/* Last measure in row needs right border */
 .measure:last-child {
     border-right: 2px solid black;
+    border-right-width: 3px;
 }
 
-/* Error styling for invalid beat count */
+/* Error styling */
 .measure-error .note-content,
 .measure-error .beam-line,
 .measure-error .dash {
     color: red !important;
     background-color: rgba(255, 0, 0, 0.05);
-    /* Slight tint for visibility */
 }
 
-/* Also color lines/dots red if possible? 
-   Dots are children of note-content, so they inherit color.
-   Beams are separate divs with background: black. We need to override background.
-*/
 .measure-error .beam-line {
     background: red !important;
-}
-
-/* Thicker Bar Line (User asked for thicker) */
-.measure {
-    border-left-width: 3px;
-}
-
-.measure:last-child {
-    border-right-width: 3px;
 }
 
 /* Repeat Signs */
 .measure.repeat-start {
     border-left: 6px double black;
-    /* Thick double line style */
 }
 
 .measure.repeat-start::before {
     content: ":";
     position: absolute;
     left: 4px;
-    /* Inside the double border */
     top: 50%;
     transform: translateY(-55%);
     font-size: 2em;
@@ -366,14 +424,12 @@ textarea:focus {
 
 .measure.repeat-end {
     border-right: 6px double black;
-    /* Thick double line style */
 }
 
 .measure.repeat-end::after {
     content: ":";
     position: absolute;
     right: 4px;
-    /* Inside the double border */
     top: 50%;
     transform: translateY(-55%);
     font-size: 2em;
@@ -382,12 +438,11 @@ textarea:focus {
     color: black;
 }
 
-/* If a measure has repeat-end, the NEXT measure's left border should be hidden to avoid double bars */
 .measure.repeat-end+.measure {
     border-left: none;
 }
 
-/* Beamed Groups and Notes */
+/* Notes & Beams */
 .note-group {
     display: inline-flex;
     justify-content: center;
@@ -395,13 +450,11 @@ textarea:focus {
     position: relative;
     vertical-align: bottom;
     width: 2.2em;
-    /* Wider again (was 1.8em) - Requested further increase */
 }
 
 .note-content {
     position: relative;
     font-size: 3em;
-    /* HUGE font relative to container (Double previous 1.5em) */
     font-weight: bold;
     padding-bottom: 0.1em;
     width: 100%;
@@ -409,15 +462,17 @@ textarea:focus {
     line-height: 1;
 }
 
-/* Beam Group Container */
+.note-content.error-syntax {
+    color: red !important;
+}
+
 .beam-group {
     display: inline-flex;
     position: relative;
     margin: 0;
 }
 
-/* Octave Dots - Need to adjust positioning for the new larger font */
-/* Octave Dots - Need to adjust positioning for the new larger font */
+/* Dots */
 .dot-above {
     position: absolute;
     left: 50%;
@@ -426,14 +481,8 @@ textarea:focus {
     line-height: 0.4;
     display: flex;
     flex-direction: column-reverse;
-    /* Stack upwards */
-
-    /* Anchoring */
     bottom: 100%;
-    /* Align bottom of dots to top of note */
-    top: auto;
     margin-bottom: 0.2em;
-    /* Gap between note and dots */
 }
 
 .dot-below {
@@ -444,35 +493,25 @@ textarea:focus {
     line-height: 0.4;
     display: flex;
     flex-direction: column;
-    /* Stack downwards */
-
-    /* Anchoring */
     top: 100%;
-    /* Align top of dots to bottom of note */
-    bottom: auto;
     margin-top: 0.2em;
-    /* Gap between note and dots */
 }
 
-/* Rhythm Beams */
+/* Beams */
 .beam-line {
     background: black;
     height: 0.2em;
-    /* Thicker (was 0.15em) */
-    /* Relative thickness */
     position: absolute;
     bottom: -0.2em;
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
-    /* For Chrome/Safari */
 }
 
 .beam-line.level-2 {
     bottom: -0.75em;
-    /* Moved further down (was -0.65em) to safely separate lines even at small fonts */
 }
 
-/* Dashes for duration */
+/* Dashes */
 .dash-container {
     display: inline-flex;
     justify-content: center;
@@ -486,33 +525,27 @@ textarea:focus {
     font-weight: normal;
 }
 
-/* Accidental (# or b) */
+/* Accidental */
 .accidental {
     position: absolute;
     font-size: 0.6em;
     top: -0.6em;
     left: 50%;
     margin-left: -1.1em;
-    /* Default for Flat (b) - stays same */
     font-weight: normal;
     line-height: 1;
 }
 
 .accidental.sharp {
     margin-left: -0.9em;
-    /* Shift right (closer to note) for Sharp (#) - Requested adjustment */
 }
 
-/* Dotted note */
 .augmentation-dot {
     position: absolute;
     right: -0.8em;
-    /* More space (was -0.4em) */
     top: 50%;
     transform: translateY(-50%);
-    /* Centered vertically */
     font-size: 0.8em;
-    /* Smaller (was 1.2em) */
     line-height: 1;
 }
 
@@ -522,7 +555,6 @@ textarea:focus {
     background: var(--bg-color);
 }
 
-/* Print Optimization */
 @media print {
 
     /* Hide everything non-essential */

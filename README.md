@@ -118,7 +118,11 @@ Type notes using numbers `1-7` and `0` for rests.
 
 ### Lyrics / Text Blocks
 Add lines starting with `##` *immediately after* a line of music notes.
-- **Note Alignment**: The lyrics are tokenized (split by spaces) and assigned to the note groups in the line above.
+- **Slurs (圓滑線)**: 
+  - Start: Append `~>` to the note (e.g., `1~>`)
+  - End: Prepend `<~` to the note (e.g., `<~5`)
+  - Cross-measure and cross-line slurs are supported.
+  - Incorrect syntax (e.g. `~` without `>` or `<`) will be highlighted in red.
 - **Left Aligned**: Each lyric token is left-aligned with its note group.
 - **Multiple Verses**: Use multiple consecutive `##` lines to add stacked verses.
 - **Empty Token**: Use `--` to skip a lyric slot (display nothing) while maintaining alignment.
