@@ -33,6 +33,8 @@
 | `,` | **低八度** (下方一點) - 後綴 | `6,` |
 | `-` | **延音線** (延長一拍) | `1-` |
 | `.` | **附點音符** | `1.` |
+| `~>` | **圓滑線 (開始)** | `1~>` |
+| `<~` | **圓滑線 (結束)** | `<~5` |
 
 ### 小節與小節線
 - **小節線**：使用 `/` 或 `|` 手動分隔小節。
@@ -41,9 +43,10 @@
   - 範例：`|: 1 2 3 4 :|`
 - **節拍檢查**：如果小節內 Note 的總拍數與設定的拍號不符，該小節代碼會以紅色顯示。
 - **音組分隔**：請使用空格來分隔每個音組 (Note Group)。
+
 ### 歌詞 / 文字區塊
 在音符行下方，使用以 `##` 開頭的行來輸入歌詞。
-- **自動對齊**：歌詞會被切分成單字（Token），並依序分配給該行的音符群組。
+- **自動對齊**：歌詞會被切分成單字（Token），並依序分配給該行的音符群組。**請使用空格來分隔歌詞文字**。
 - **靠左對齊**：歌詞會靠左對齊對應的音符群組。
 - **多段歌詞**：連續多行 `##` 可建立多段歌詞（Verses），垂直堆疊顯示。
 - **空白佔位符**：使用 `--` 代表該音符下方不顯示歌詞（但保留位置）。
@@ -107,6 +110,8 @@ Type notes using numbers `1-7` and `0` for rests.
 | `,` | **Low Octave** - Suffix | `6,` (Dot below) |
 | `-` | **Extension** (Quarter note duration) | `1-` |
 | `.` | **Dotted Note** | `1.` |
+| `~>` | **Slur (Start)** | `1~>` |
+| `<~` | **Slur (End)** | `<~5` |
 
 ### Measures and Bars
 - **Bar Lines**: Use `/` or `|` to manually separate notes into measures.
@@ -118,11 +123,7 @@ Type notes using numbers `1-7` and `0` for rests.
 
 ### Lyrics / Text Blocks
 Add lines starting with `##` *immediately after* a line of music notes.
-- **Slurs (圓滑線)**: 
-  - Start: Append `~>` to the note (e.g., `1~>`)
-  - End: Prepend `<~` to the note (e.g., `<~5`)
-  - Cross-measure and cross-line slurs are supported.
-  - Incorrect syntax (e.g. `~` without `>` or `<`) will be highlighted in red.
+- **Alignment**: Lyrics are split into tokens by **spaces**. Each token aligns with one note group.
 - **Left Aligned**: Each lyric token is left-aligned with its note group.
 - **Multiple Verses**: Use multiple consecutive `##` lines to add stacked verses.
 - **Empty Token**: Use `--` to skip a lyric slot (display nothing) while maintaining alignment.
