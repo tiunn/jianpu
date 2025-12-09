@@ -309,7 +309,8 @@ document.addEventListener('DOMContentLoaded', () => {
     render();
 
     // Set initial active state after all elements are defined
-    updateLanguage('zh');
+    const userLang = navigator.language.startsWith('zh') ? 'zh' : 'en';
+    updateLanguage(userLang);
 
     function debounce(func, wait) {
         let timeout;
