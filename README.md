@@ -12,7 +12,6 @@
 - **列印 / PDF 匯出**：針對列印最佳化的樣式，可輸出高品質 PDF。
 - **縮放控制**：透過滑桿調整簡譜的大小（預設為緊湊大小）。
 - **調號選擇**：可從下拉選單選擇調號（如 `1=C`、`1=G`）。
-- **調號選擇**：可從下拉選單選擇調號（如 `1=C`、`1=G`）。
 - **歌詞與文字**：支援多行歌詞輸入，自動對齊音符，並支援空白佔位符。
 - **自訂設定**：可設定曲名、每小節拍數及每行小節數。
 - **介面語言**：支援 English 與 繁體中文 切換。
@@ -87,7 +86,7 @@ A simple, lightweight web tool for creating, editing, and printing Jianpu (numbe
 - **Real-time Rendering**: Type your notation code and see the score update instantly.
 - **Smart Layout**: Automatically organizes measures into rows.
 - **Save & Load**: Save your work as `.json` project files and load them later.
-- **Print / PDF Export**: Optimized print styles for high-quality PDF output (with correct beam rendering).
+- **Print / PDF Export**: Optimized print styles for high-quality PDF output.
 - **Zoom Control**: Adjust the size of the music notes (defaults to compact size).
 - **Key Signature**: Select the musical key (e.g., `1=C`, `1=G`) from the dropdown.
 - **Lyrics & Text**: Supports multiple stacked verses, automatic lyric token alignment to notes, and empty tokens.
